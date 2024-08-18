@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/foxboron/swtpm_test"
-	"github.com/google/go-tpm/tpm2"
+	swtpm_test "github.com/foxboron/swtpm_test"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
 
@@ -18,7 +18,7 @@ var (
 	// Default SRK handle
 	localHandle tpmutil.Handle = 0x81010004
 
-	oaepLabel = []byte("age-encryption.org/v1/ssh-rsa")
+	// oaepLabel = []byte("age-encryption.org/v1/ssh-rsa")
 
 	srkTemplate = tpm2.Public{
 		Type:       tpm2.AlgRSA,

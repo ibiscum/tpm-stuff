@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/foxboron/swtpm_test"
-	"github.com/google/go-tpm/tpm2"
+	swtpm_test "github.com/foxboron/swtpm_test"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
@@ -174,7 +174,7 @@ func TestCreateEncryptionKey(t *testing.T) {
 		salt := make([]byte, 0, len(extpub))
 		salt = append(salt, extpub...)
 
-		tpm2.KDFe()
+		// tpm2.KDFe()
 		h := hkdf.New(sha256.New, shared[:], salt, []byte(p256Label))
 		wrappingKey := make([]byte, chacha20poly1305.KeySize)
 		if _, err := io.ReadFull(h, wrappingKey); err != nil {

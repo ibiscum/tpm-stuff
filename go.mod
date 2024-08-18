@@ -1,9 +1,12 @@
 module tpm-test
 
-go 1.18
+go 1.22.3
 
 require (
-	github.com/google/go-tpm v0.3.3 // indirect
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	github.com/foxboron/swtpm_test v0.0.0-20230726224112-46aaafdf7006
+	github.com/google/go-tpm v0.9.1
+	golang.org/x/crypto v0.26.0
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 )
+
+require golang.org/x/sys v0.24.0 // indirect

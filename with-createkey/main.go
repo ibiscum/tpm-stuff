@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/go-tpm/tpm2"
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
 
@@ -38,7 +38,7 @@ var (
 	certAuthHandler  = tpmutil.Handle(0x81010100)
 	EKReservedHandle = tpmutil.Handle(0x81010001)
 
-	tpmPath = "/dev/tpm1"
+	tpmPath = "/dev/tpmrm0"
 
 	defaultSRKTemplate = tpm2.Public{
 		Type:       tpm2.AlgRSA,
@@ -121,7 +121,7 @@ func getPrimary(rw io.ReadWriter, hier, handle tpmutil.Handle, tmpl tpm2.Public)
 	return handle, nil
 }
 
-func createKey(keyHandle tpmutil.Handle, template tpm2.Public) error {
+func createKey() error {
 	rw, err := OpenTPM()
 	if err != nil {
 		return err

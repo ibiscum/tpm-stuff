@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/foxboron/swtpm_test"
-	"github.com/google/go-tpm/tpm2"
+	swtpm_test "github.com/foxboron/swtpm_test"
+
+	"github.com/google/go-tpm/legacy/tpm2"
 	"github.com/google/go-tpm/tpmutil"
 )
 
