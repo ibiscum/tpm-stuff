@@ -35,7 +35,7 @@ var (
 	encryptionCertNVIndex     = tpmutil.Handle(0x81000100)
 	commonSrkEquivalentHandle = tpmutil.Handle(0x81000001)
 
-	certAuthHandler  = tpmutil.Handle(0x81010100)
+	// certAuthHandler  = tpmutil.Handle(0x81010100)
 	EKReservedHandle = tpmutil.Handle(0x81010001)
 
 	tpmPath = "/dev/tpmrm0"
