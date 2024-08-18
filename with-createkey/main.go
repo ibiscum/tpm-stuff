@@ -187,14 +187,14 @@ func AuthCommand(rw io.ReadWriteCloser, password []byte, pcrSel tpm2.PCRSelectio
 	// }
 
 	if _, _, err := tpm2.PolicySecret(rw, tpm2.HandleEndorsement, tpm2.AuthCommand{Session: tpm2.HandlePasswordSession, Attributes: tpm2.AttrContinueSession}, session, nil, nil, nil, 0); err != nil {
-		return tpm2.AuthCommand{}, fmt.Errorf("Unable to create PolicySecret: %v", err)
+		return tpm2.AuthCommand{}, fmt.Errorf("unable to create PolicySecret: %v", err)
 	}
 
 	authCommand := tpm2.AuthCommand{Session: session, Attributes: tpm2.AttrContinueSession}
 	return authCommand, nil
 }
 
-func createKeyAuthSession(handle tpmutil.Handle, template tpm2.Public) error {
+func createKeyAuthSession() error {
 	rw, err := OpenTPM()
 	if err != nil {
 		return err
@@ -338,7 +338,7 @@ func main() {
 	switch os.Args[1] {
 	case "create-keys":
 		// err := createKey(encryptionCertNVIndex, rsaKeyParams)
-		err := createKeyAuthSession(certAuthHandler, rsaKeyParams)
+		err := createKeyAuthSession()
 		if err != nil {
 			log.Fatal(err)
 		}
