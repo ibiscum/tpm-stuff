@@ -116,7 +116,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating EK: %v", err)
 	}
-	defer tpm2.FlushContext(rwc, ekh)
+	defer func() {
+		err := tpm2.FlushContext(rwc, ekh)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	log.Printf("======= CreateKeyUsingAuth ========")
 
 	sessCreateHandle, _, err := tpm2.StartAuthSession(
@@ -131,7 +136,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to create StartAuthSession : %v", err)
 	}
-	defer tpm2.FlushContext(rwc, sessCreateHandle)
+	defer func() {
+		err := tpm2.FlushContext(rwc, sessCreateHandle)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	if _, _, err := tpm2.PolicySecret(rwc, tpm2.HandleEndorsement, tpm2.AuthCommand{Session: tpm2.HandlePasswordSession, Attributes: tpm2.AttrContinueSession}, sessCreateHandle, nil, nil, nil, 0); err != nil {
 		log.Fatalf("Unable to create PolicySecret: %v", err)
@@ -183,9 +193,14 @@ func main() {
 		tpm2.AlgNull,
 		tpm2.AlgSHA256)
 	if err != nil {
-		log.Fatalf("Unable to create StartAuthSession : %v", err)
+		log.Fatalf("Unable to create StartAuthSession: %v", err)
 	}
-	defer tpm2.FlushContext(rwc, sessLoadHandle)
+	defer func() {
+		err := tpm2.FlushContext(rwc, sessLoadHandle)
+		if err != nil {
+			log.Fatalf("FlushContext: %v", err)
+		}
+	}()
 
 	if _, _, err := tpm2.PolicySecret(rwc, tpm2.HandleEndorsement, tpm2.AuthCommand{Session: tpm2.HandlePasswordSession, Attributes: tpm2.AttrContinueSession}, sessLoadHandle, nil, nil, nil, 0); err != nil {
 		log.Fatalf("Unable to create PolicySecret: %v", err)
@@ -193,14 +208,25 @@ func main() {
 	authCommandLoad := tpm2.AuthCommand{Session: sessLoadHandle, Attributes: tpm2.AttrContinueSession}
 
 	aKkeyHandle, keyName, err := tpm2.LoadUsingAuth(rwc, ekh, authCommandLoad, akPub, akPriv)
-	defer tpm2.FlushContext(rwc, aKkeyHandle)
+	defer func() {
+		err := tpm2.FlushContext(rwc, aKkeyHandle)
+		if err != nil {
+			log.Fatalf("FlushContext: %v", err)
+		}
+	}()
 	if err != nil {
 		log.Fatalf("Load AK failed: %s", err)
 	}
 	log.Printf("AK keyName: %v,", hex.EncodeToString(keyName))
 
-	tpm2.FlushContext(rwc, sessLoadHandle)
-	tpm2.FlushContext(rwc, sessCreateHandle)
+	err = tpm2.FlushContext(rwc, sessLoadHandle)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = tpm2.FlushContext(rwc, sessCreateHandle)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create Child of AK that is Unrestricted (does not have tpm2.FlagRestricted)
 	// Under endorsement handle
@@ -218,7 +244,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to create StartAuthSession : %v", err)
 	}
-	defer tpm2.FlushContext(rwc, sessCreateHandle)
+	defer func() {
+		err := tpm2.FlushContext(rwc, sessCreateHandle)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}()
 
 	// if err = tpm2.PolicyPCR(rwc, sessCreateHandle, nil, pcrSelection23); err != nil {
 	// 	log.Fatalf("PolicyPCR failed: %v", err)

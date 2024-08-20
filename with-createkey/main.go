@@ -101,15 +101,16 @@ func getPrimary(rw io.ReadWriter, hier, handle tpmutil.Handle, tmpl tpm2.Public)
 	if err == nil {
 		return handle, nil
 	}
-	tpm2.EvictControl(rw, "", hier, handle, handle)
+
+	err = tpm2.EvictControl(rw, "", hier, handle, handle)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("creating primary")
 	pcrSelection := tpm2.PCRSelection{Hash: tpm2.AlgSHA256, PCRs: []int{23}}
 
-	pkh, _, err := tpm2.CreatePrimary(rw,
-		hier,
-		pcrSelection,
-		"", "",
-		tmpl)
+	pkh, _, err := tpm2.CreatePrimary(rw, hier, pcrSelection, "", "", tmpl)
 	if err != nil {
 		return tpmutil.Handle(0), fmt.Errorf("error creating Primary %v", err)
 	}
@@ -150,7 +151,12 @@ func createKey() error {
 	if err != nil {
 		return fmt.Errorf("error loading hash key %v", err)
 	}
-	defer tpm2.FlushContext(rw, loadedHandle)
+	defer func() {
+		err := tpm2.FlushContext(rw, loadedHandle)
+		if err != nil {
+			log.Fatalf("FlushContext: %v", err)
+		}
+	}()
 
 	// if err = tpm2.EvictControl(rw, "", tpm2.HandleOwner, encryptionCertNVIndex, encryptionCertNVIndex); err != nil {
 	// 	return fmt.Errorf("createKey: EvictControl2 failed: %v", err)
@@ -158,7 +164,12 @@ func createKey() error {
 	if err = tpm2.EvictControl(rw, "", tpm2.HandleOwner, loadedHandle, encryptionCertNVIndex); err != nil {
 		return fmt.Errorf("createKey: EvictControl2 failed: %v", err)
 	}
-	defer tpm2.FlushContext(rw, encryptionCertNVIndex)
+	defer func() {
+		err := tpm2.FlushContext(rw, encryptionCertNVIndex)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	fmt.Println("Created key")
 	return nil
 }
@@ -225,7 +236,12 @@ func createKeyAuthSession() error {
 	// rsaKeyParams.AuthPolicy = pol
 
 	// Remember to flush auth session
-	defer tpm2.FlushContext(rw, auth.Session)
+	defer func() {
+		err := tpm2.FlushContext(rw, auth.Session)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	_, _, _, _, _, err = tpm2.CreateKeyUsingAuth(rw, EKReservedHandle, pcrSelection, auth, "", rsaKeyParams)
 	if err != nil {
@@ -277,7 +293,10 @@ func signFile(handle tpmutil.Handle) error {
 		fmt.Fprintf(os.Stderr, "Error Signing: %v", err)
 	}
 	fmt.Fprintf(os.Stderr, "Signature data:  %s\n", base64.RawStdEncoding.EncodeToString([]byte(sig.RSA.Signature)))
-	os.WriteFile("testfile.sig", sig.RSA.Signature, 0644)
+	err = os.WriteFile("testfile.sig", sig.RSA.Signature, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }
 

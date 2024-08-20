@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 
@@ -89,7 +90,10 @@ func TestCreateEncryptionKey(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to load")
 		}
-		defer tpm2.FlushContext(rwc, sealedHandle)
+		defer func() {
+			err := tpm2.FlushContext(rwc, sealedHandle)
+			log.Fatal(err)
+		}()
 		if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, sealedHandle, localHandle); err != nil {
 			t.Fatalf("failed to evict handle: %v", err)
 		}

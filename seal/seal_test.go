@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"log"
 	"testing"
 
 	swtpm_test "github.com/foxboron/swtpm_test"
@@ -202,7 +203,10 @@ func TestSealWithPassword(t *testing.T) {
 	t.Run("seal secret with password", func(tj *testing.T) {
 		sh, policy, err := policySession(rwc, pin)
 		defer func() {
-			tpm2.FlushContext(rwc, sh)
+			err := tpm2.FlushContext(rwc, sh)
+			if err != nil {
+				log.Fatalf("FlushContext: %v", err)
+			}
 		}()
 		if err != nil {
 			t.Fatalf("failed making policy")
@@ -258,7 +262,10 @@ func TestSealWithPasswordPersistent(t *testing.T) {
 	t.Run("seal secret with password through persistent handle", func(tj *testing.T) {
 		sh, policy, err := policySession(rwc, pin)
 		defer func() {
-			tpm2.FlushContext(rwc, sh)
+			err := tpm2.FlushContext(rwc, sh)
+			if err != nil {
+				log.Fatalf("FlushContext: %v", err)
+			}
 		}()
 		if err != nil {
 			t.Fatalf("failed making policy")
@@ -271,7 +278,12 @@ func TestSealWithPasswordPersistent(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to load")
 		}
-		defer tpm2.FlushContext(rwc, sealedHandle)
+		defer func() {
+			err := tpm2.FlushContext(rwc, sealedHandle)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
 		if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, sealedHandle, localHandle); err != nil {
 			t.Fatalf("failed to evict handle: %v", err)
 		}
@@ -320,7 +332,10 @@ func TestSealWithPasswordLocalStorage(t *testing.T) {
 	t.Run("seal secret with password through local storage", func(tj *testing.T) {
 		sh, policy, err := policySession(rwc, pin)
 		defer func() {
-			tpm2.FlushContext(rwc, sh)
+			err := tpm2.FlushContext(rwc, sh)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}()
 		if err != nil {
 			t.Fatalf("failed making policy")
@@ -340,7 +355,12 @@ func TestSealWithPasswordLocalStorage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to load")
 		}
-		defer tpm2.FlushContext(rwc, sealedHandle)
+		defer func() {
+			err := tpm2.FlushContext(rwc, sealedHandle)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
 		b, err := tpm2.UnsealWithSession(rwc, sess, sealedHandle, pin)
 		if err != nil {
 			t.Fatalf("failed to unseal: %v", err)
@@ -451,7 +471,10 @@ func TestSealWithFuturePCR(t *testing.T) {
 	t.Run("seal secret with pcrs", func(tj *testing.T) {
 		sh, policy, err := policySessionPCR(rwc, []int{16})
 		defer func() {
-			tpm2.FlushContext(rwc, sh)
+			err := tpm2.FlushContext(rwc, sh)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}()
 		if err != nil {
 			t.Fatalf("failed making policy")

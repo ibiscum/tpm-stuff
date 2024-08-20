@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 
@@ -61,6 +62,7 @@ func TestCreateEncryptionAgeKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	rwc, err := tpm2.OpenTPM(socket)
 	if err != nil {
 		t.Fatal(err)
@@ -68,24 +70,33 @@ func TestCreateEncryptionAgeKey(t *testing.T) {
 
 	handle, _, err := tpm2.CreatePrimary(rwc, tpm2.HandleOwner, tpm2.PCRSelection{}, "", "", srkTemplate)
 	if err != nil {
-		t.Fatalf("failed CreatedPrimary")
+		t.Fatalf("failed CreatePrimary")
 	}
+
 	if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, handle, srkHandle); err != nil {
 		t.Fatalf("failed EvictControl")
 	}
+
 	t.Run("create key, persistent", func(t *testing.T) {
 		priv, pub, _, _, _, err := tpm2.CreateKey(rwc, handle, tpm2.PCRSelection{}, "", "", rsaKeyParamsDecrypt)
 		if err != nil {
-			t.Fatalf("message: %v", err)
+			t.Fatalf("CreateKey error message: %v", err)
 		}
 
 		sealedHandle, _, err = tpm2.Load(rwc, srkHandle, "", pub, priv)
 		if err != nil {
-			t.Fatalf("failed to load")
+			t.Fatalf("Load error message: %v", err)
 		}
-		defer tpm2.FlushContext(rwc, sealedHandle)
+
+		defer func() {
+			err := tpm2.FlushContext(rwc, sealedHandle)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+
 		if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, sealedHandle, localHandle); err != nil {
-			t.Fatalf("failed to evict handle: %v", err)
+			t.Fatalf("EvictControl error message: %v", err)
 		}
 	})
 

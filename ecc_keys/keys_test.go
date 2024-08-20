@@ -78,11 +78,13 @@ func TestCreateEncryptionKey(t *testing.T) {
 
 	handle, _, err := tpm2.CreatePrimary(rwc, tpm2.HandleOwner, tpm2.PCRSelection{}, "", "", srkTemplate)
 	if err != nil {
-		t.Fatalf("failed CreatedPrimary")
+		t.Fatalf("failed CreatePrimary")
 	}
+
 	if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, handle, srkHandle); err != nil {
 		t.Fatalf("failed EvictControl")
 	}
+
 	t.Run("create key, persistent", func(t *testing.T) {
 		priv, pub, _, _, _, err := tpm2.CreateKey(rwc, handle, tpm2.PCRSelection{}, "", "", eccKeyParamsDecrypt)
 		if err != nil {
@@ -104,7 +106,13 @@ func TestCreateEncryptionKey(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to load")
 		}
-		defer tpm2.FlushContext(rwc, sealedHandle)
+		defer func() {
+			err := tpm2.FlushContext(rwc, sealedHandle)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+		}()
 		if err = tpm2.EvictControl(rwc, "", tpm2.HandleOwner, sealedHandle, localHandle); err != nil {
 			t.Fatalf("failed to evict handle: %v", err)
 		}
@@ -161,7 +169,7 @@ func TestCreateEncryptionKey(t *testing.T) {
 	})
 
 	// The rest of this code is chacha20 as done by age
-	// Just copypasta to ensure it works in context
+	// Just copypaste to ensure it works in context
 	// We could move the hkdf into the TPM probably?
 	secret := []byte("This is a secret")
 	var sealed []byte
